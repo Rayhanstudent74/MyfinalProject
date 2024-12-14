@@ -1,0 +1,82 @@
+.model small
+.stack 100h
+.data
+    msg1 db 10, 13, "Fibonacci first terms:", 10, 13, "$"
+    msg2 db 10, 13, "Starting from 8 while other sequences include 1 in the first terms:", 10, 13, "$"
+.code
+main proc
+    ; Initialize data segment
+    mov ax, @data
+    mov ds, ax
+
+    ; Display the first message
+    lea dx, msg1
+    mov ah, 09h
+    int 21h
+
+    ; Display the second message
+    lea dx, msg2
+    mov ah, 09h
+    int 21h
+
+    ; Initialize Fibonacci terms
+    mov bh, 0        ; Previous term (initially 0)
+    mov bl, 8        ; Current term (starts at 8)
+    mov cx, 7        ; Number of Fibonacci terms to display
+
+fibonacci_loop:
+    ; Display the current term (BL)
+    mov dl, bl       ; Move current term to DL
+    call print_number ; Call subroutine to print the number
+
+    ; Print a newline (CR + LF)
+    mov ah, 02h
+    mov dl, 10       ; Line Feed
+    int 21h
+    mov dl, 13       ; Carriage Return
+    int 21h
+
+    ; Calculate the next Fibonacci term
+    mov al, bl       ; AL = Current term (BL)
+    add al, bh       ; AL = AL + BH (Previous term)
+    mov bh, bl       ; Update previous term (BH = BL)
+    mov bl, al       ; Update current term (BL = AL)
+
+    loop fibonacci_loop ; Repeat until CX = 0
+
+    ; Exit the program
+    mov ah, 4Ch
+    int 21h
+
+; Subroutine to print a single-byte number in DL
+print_number proc
+    push ax
+    push dx
+
+    mov ax, 0        ; Clear AX
+    mov al, dl       ; Move DL into AL for division
+    mov bl, 10       ; Divisor = 10
+    div bl           ; AX / BL -> Quotient in AL, Remainder in AH
+
+    ; Print tens digit (if any)
+    cmp al, 0        ; Check if the quotient is zero
+    je print_units   ; Skip printing tens if zero
+    add al, '0'      ; Convert to ASCII
+    mov dl, al
+    mov ah, 02h
+    int 21h
+
+print_units:
+    ; Print units digit
+    add ah, '0'      ; Convert remainder to ASCII
+    mov dl, ah
+    mov ah, 02h
+    int 21h
+
+    pop dx
+    pop ax
+    ret
+print_number endp
+
+main endp
+end main
